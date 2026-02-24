@@ -22,13 +22,13 @@ class PDMKT_WFP_Settings {
 		if ( 'settings_page_webhooks-for-cpt' !== $hook ) {
 			return;
 		}
-		wp_enqueue_style( 'pdmkt-wfp-admin-style', plugins_url( 'assets/css/admin-style.css', dirname( __FILE__ ) ) );
+		wp_enqueue_style( 'pdmkt-wfp-admin-style', plugins_url( 'assets/css/admin-style.css', dirname( __FILE__ ) ), array(), '1.2.1' );
 	}
 
 	public function add_admin_menu() {
 		add_options_page(
-			__( 'Webhooks for CPT', 'webhooks-for-cpt' ),
-			__( 'Webhooks for CPT', 'webhooks-for-cpt' ),
+			esc_html__( 'Webhooks for CPT', 'webhooks-for-cpt' ),
+			esc_html__( 'Webhooks for CPT', 'webhooks-for-cpt' ),
 			'manage_options',
 			'webhooks-for-cpt',
 			array( $this, 'settings_page_content' )
@@ -36,7 +36,23 @@ class PDMKT_WFP_Settings {
 	}
 
 	public function register_settings() {
-		register_setting( 'wf_cpt_group', $this->option_name );
+		register_setting( 'wf_cpt_group', $this->option_name, array( 'sanitize_callback' => array( $this, 'sanitize_settings' ) ) );
+	}
+
+	/**
+	 * Sanitize plugin settings
+	 */
+	public function sanitize_settings( $input ) {
+		$new_input = array();
+		if ( is_array( $input ) ) {
+			foreach ( $input as $key => $values ) {
+				$new_input[ sanitize_key( $key ) ] = array(
+					'enabled' => isset( $values['enabled'] ) ? 1 : 0,
+					'url'     => esc_url_raw( $values['url'] ),
+				);
+			}
+		}
+		return $new_input;
 	}
 
 	public function settings_page_content() {
@@ -44,8 +60,8 @@ class PDMKT_WFP_Settings {
 		$settings = get_option( $this->option_name, array() );
 		?>
 		<div class="wrap">
-			<h1><?php _e( 'Webhooks for CPT', 'webhooks-for-cpt' ); ?></h1>
-			<p><?php _e( 'Configure a webhook URL for each Custom Post Type. Notifications are only sent for selected CPTs.', 'webhooks-for-cpt' ); ?></p>
+			<h1><?php esc_html_e( 'Webhooks for CPT', 'webhooks-for-cpt' ); ?></h1>
+			<p><?php esc_html_e( 'Configure a webhook URL for each Custom Post Type. Notifications are only sent for selected CPTs.', 'webhooks-for-cpt' ); ?></p>
 			
 			<form method="post" action="options.php">
 				<?php settings_fields( 'wf_cpt_group' ); ?>
@@ -53,15 +69,15 @@ class PDMKT_WFP_Settings {
 				<table class="pdmkt-wfp-table">
 					<thead>
 						<tr>
-							<th scope="col"><?php _e( 'Custom Post Type', 'webhooks-for-cpt' ); ?></th>
-							<th scope="col"><?php _e( 'Enable', 'webhooks-for-cpt' ); ?></th>
-							<th scope="col"><?php _e( 'Webhook URL', 'webhooks-for-cpt' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Custom Post Type', 'webhooks-for-cpt' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Enable', 'webhooks-for-cpt' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Webhook URL', 'webhooks-for-cpt' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php if ( empty( $cpts ) ) : ?>
 							<tr>
-								<td colspan="3"><?php _e( 'No Custom Post Types detected (excluding standard ones).', 'webhooks-for-cpt' ); ?></td>
+								<td colspan="3"><?php esc_html_e( 'No Custom Post Types detected (excluding standard ones).', 'webhooks-for-cpt' ); ?></td>
 							</tr>
 						<?php else : ?>
 							<?php foreach ( $cpts as $slug => $cpt ) : 
@@ -89,7 +105,8 @@ class PDMKT_WFP_Settings {
 				<p>
 					<?php 
 					printf( 
-						__( 'Created by %s.', 'webhooks-for-cpt' ), 
+						/* translators: %s: Author link */
+						esc_html__( 'Created by %s.', 'webhooks-for-cpt' ), 
 						'<a href="https://panoramasdmkt.com" target="_blank">Panoramas Digital Marketing</a>' 
 					); 
 					?>
